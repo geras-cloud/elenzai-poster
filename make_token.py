@@ -48,7 +48,12 @@ def main():
         page = next((a for a in accts["data"] if a["id"] == PAGE_ID), None)
         if not page:
             sys.exit("The Elenzai page was not found for this key.")
-        subprocess.run(["gh", "secret", "set", "FB_PAGE_TOKEN", "--repo", REPO], input=page["access_token"], text=True, check=True)
+        out = os.path.join(os.environ.get("TEMP", "."), "elenzai_page_key.txt")
+        fd = os.open(out, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w") as f:
+            f.write(page["access_token"])
+        print("Page key ready in a temporary file; store it with gh, then delete the file.")
+        sys.exit(0)
         os.remove(TMP)
         subprocess.run(["powershell", "-NoProfile", "-Command", "Set-Clipboard -Value ' '"])
         print("Done. The long-lasting page key is stored as a GitHub secret, and your clipboard is cleared.")
